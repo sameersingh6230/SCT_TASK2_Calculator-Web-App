@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEITY Calculator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg-main: #f3f4f6;
+      --bg-secondary: #ffffff;
+      --bg-dark: #111827;
+      --accent: #9333ea;
+      --accent-dark: #7e22ce;
+      --text-main: #1f2937;
+      --text-light: #ffffff;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      --radius: 1rem;
+      --transition: all 0.3s ease-in-out;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #ede9fe, #f3f4f6);
+    }
+
+    .calculator {
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 360px;
+      overflow: hidden;
+    }
+
+    .header {
+      background: var(--accent);
+      color: var(--text-light);
+      padding: 1.2rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 1.2rem;
+      background: none;
+      border: none;
+      color: var(--text-light);
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .display {
+      background: #f9fafb;
+      padding: 1rem;
+      text-align: right;
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--text-main);
+      min-height: 3.5rem;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: #e5e7eb;
+    }
+
+    button {
+      padding: 1.25rem;
+      font-size: 1.2rem;
+      background: var(--bg-secondary);
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-main);
+    }
+
+    button:hover {
+      background: #f3f4f6;
+    }
+
+    .operator {
+      background: var(--accent);
+      color: var(--text-light);
+    }
+
+    .operator:hover {
+      background: var(--accent-dark);
+    }
+
+    .equals {
+      grid-column: span 2;
+      background: #10b981;
+      color: var(--text-light);
+    }
+
+    .equals:hover {
+      background: #059669;
+    }
+
+    .clear, .delete {
+      background: #ef4444;
+      color: var(--text-light);
+    }
+
+    .clear:hover, .delete:hover {
+      background: #dc2626;
+    }
+
+    .history {
+      margin-top: 1rem;
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: var(--radius);
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      box-shadow: var(--shadow);
+    }
+
+    .dark {
+      --bg-main: #1f2937;
+      --bg-secondary: #111827;
+      --text-main: #f9fafb;
+      --accent: #7c3aed;
+      --accent-dark: #6d28d9;
+      --text-light: #f3f4f6;
+    }
+
+    .dark body {
+      background: #1e293b;
+    }
+
+    .dark .display {
+      background: #1f2937;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="header">
+      <h1>DEITY Calculator</h1>
+      <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <button class="clear">AC</button>
+      <button class="delete">DEL</button>
+      <button class="operator">%</button>
+      <button class="operator">/</button>
+      <button>7</button>
+      <button>8</button>
+      <button>9</button>
+      <button class="operator">*</button>
+      <button>4</button>
+      <button>5</button>
+      <button>6</button>
+      <button class="operator">-</button>
+      <button>1</button>
+      <button>2</button>
+      <button>3</button>
+      <button class="operator">+</button>
+      <button>0</button>
+      <button>.</button>
+      <button class="equals">=</button>
+    </div>
+  </div>
+  <div class="history" id="history"></div>
+
+  <script>
+    const display = document.getElementById('display');
+    const buttons = document.querySelectorAll('button');
+    const history = document.getElementById('history');
+    const themeToggle = document.getElementById('themeToggle');
+    let current = '';
+    let prev = '';
+    let op = '';
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const icon = themeToggle.querySelector('i');
+      icon.classList.toggle('fa-moon');
+      icon.classList.toggle('fa-sun');
+    });
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.textContent;
+
+        if (btn.classList.contains('clear')) {
+          current = '';
+          prev = '';
+          op = '';
+          display.textContent = '0';
+        } else if (btn.classList.contains('delete')) {
+          current = current.slice(0, -1);
+          display.textContent = current || '0';
+        } else if (btn.classList.contains('operator')) {
+          if (current === '') return;
+          prev = current;
+          op = val;
+          current = '';
+        } else if (btn.classList.contains('equals')) {
+          if (prev === '' || current === '' || op === '') return;
+          try {
+            let result = eval(prev + op + current);
+            result = parseFloat(result.toFixed(10));
+            history.innerHTML = `<div>${prev} ${op} ${current} = ${result}</div>` + history.innerHTML;
+            current = result.toString();
+            prev = '';
+            op = '';
+            display.textContent = current;
+          } catch {
+            display.textContent = 'Error';
+          }
+        } else {
+          current += val;
+          display.textContent = current;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+
