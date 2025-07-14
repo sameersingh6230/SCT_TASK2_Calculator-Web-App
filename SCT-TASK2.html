@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+        }
+
+        .calculator-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .calculator-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .calculator-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+        }
+
+        .display-container {
+            padding: 20px;
+            background-color: var(--light-color);
+            border-bottom: 1px solid #ddd;
+        }
+
+        .previous-operand {
+            color: #7f8c8d;
+            font-size: 1rem;
+            text-align: right;
+            min-height: 1.5rem;
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .current-operand {
+            color: var(--dark-color);
+            font-size: 2.5rem;
+            text-align: right;
+            font-weight: bold;
+            min-height: 2.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .error-message {
+            color: var(--accent-color);
+            font-size: 0.8rem;
+            text-align: right;
+            min-height: 1rem;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .buttons-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #ddd;
+            padding: 10px;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            background-color: white;
+            font-size: 1.25rem;
+            padding: 20px 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s;
+        }
+
+        button:active::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .operator {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .operator:hover {
+            background-color: #2980b9;
+        }
+
+        .number {
+            background-color: white;
+            color: var(--dark-color);
+        }
+
+        .number:hover {
+            background-color: #f1f1f1;
+        }
+
+        .decimal {
+            background-color: white;
+            color: var(--dark-color);
+        }
+
+        .decimal:hover {
+            background-color: #f1f1f1;
+        }
+
+        .equals {
+            background-color: var(--accent-color);
+            color: white;
+            grid-column: span 2;
+        }
+
+        .equals:hover {
+            background-color: #c0392b;
+        }
+
+        .clear {
+            background-color: var(--dark-color);
+            color: white;
+        }
+
+        .clear:hover {
+            background-color: #2c3e50;
+        }
+
+        .delete {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .delete:hover {
+            background-color: #2c3e50;
+        }
+
+        .history-container {
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-container h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .history-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-expression {
+            color: var(--secondary-color);
+        }
+
+        .history-result {
+            float: right;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .dark-theme {
+            --primary-color: #1a1a2e;
+            --secondary-color: #0f3460;
+            --accent-color: #e94560;
+            --light-color: #16213e;
+            --dark-color: #0f3460;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-theme .calculator-container {
+            background-color: #16213e;
+        }
+
+        .dark-theme .display-container {
+            background-color: #0f3460;
+        }
+
+        .dark-theme .previous-operand, 
+        .dark-theme .error-message {
+            color: #e0e0e0;
+        }
+
+        .dark-theme .current-operand {
+            color: #ffffff;
+        }
+
+        .dark-theme .buttons-container {
+            background-color: #0f3460;
+        }
+
+        .dark-theme button {
+            background-color: #16213e;
+            color: #e0e0e0;
+        }
+
+        .dark-theme .number:hover {
+            background-color: #1a1a2e;
+        }
+
+        .dark-theme .operator {
+            background-color: #0f3460;
+        }
+
+        .dark-theme .operator:hover {
+            background-color: #1a1a2e;
+        }
+
+        .dark-theme .decimal {
+            background-color: #16213e;
+        }
+
+        .dark-theme .decimal:hover {
+            background-color: #1a1a2e;
+        }
+
+        @media (max-width: 500px) {
+            .calculator-container, .history-container {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            button {
+                padding: 15px 8px;
+                font-size: 1rem;
+            }
+
+            .current-operand {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <div class="calculator-header">
+            <h1>Advanced Calculator</h1>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <div class="display-container">
+            <div class="previous-operand" id="previousOperand"></div>
+            <div class="current-operand" id="currentOperand">0</div>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+        <div class="buttons-container">
+            <button class="clear" data-action="clear">AC</button>
+            <button class="delete" data-action="delete">DEL</button>
+            <button class="operator" data-action="percentage">%</button>
+            <button class="operator" data-action="divide">÷</button>
+            
+            <button class="number" data-digit="7">7</button>
+            <button class="number" data-digit="8">8</button>
+            <button class="number" data-digit="9">9</button>
+            <button class="operator" data-action="multiply">×</button>
+            
+            <button class="number" data-digit="4">4</button>
+            <button class="number" data-digit="5">5</button>
+            <button class="number" data-digit="6">6</button>
+            <button class="operator" data-action="subtract">−</button>
+            
+            <button class="number" data-digit="1">1</button>
+            <button class="number" data-digit="2">2</button>
+            <button class="number" data-digit="3">3</button>
+            <button class="operator" data-action="add">+</button>
+            
+            <button class="number" data-digit="0">0</button>
+            <button class="decimal" data-action="decimal">.</button>
+            <button class="equals" data-action="calculate">=</button>
+        </div>
+    </div>
+
+    <div class="history-container">
+        <h2>Calculation History</h2>
+        <div id="historyList"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const previousOperandElement = document.getElementById('previousOperand');
+            const currentOperandElement = document.getElementById('currentOperand');
+            const errorMessageElement = document.getElementById('errorMessage');
+            const historyListElement = document.getElementById('historyList');
+            const themeToggleElement = document.getElementById('themeToggle');
+            
+            // Calculator State
+            let calculatorState = {
+                currentOperand: '0',
+                previousOperand: '',
+                operation: null,
+                shouldResetCurrentOperand: false,
+                hasError: false
+            };
+
+            // History State
+            let history = [];
+
+            // Theme Toggle
+            themeToggleElement.addEventListener('click', () => {
+                document.body.classList.toggle('dark-theme');
+                const icon = themeToggleElement.querySelector('i');
+                if (document.body.classList.contains('dark-theme')) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                }
+            });
+
+            // Input Handlers
+            function appendDigit(digit) {
+                if (calculatorState.hasError) {
+                    clear();
+                    return;
+                }
+
+                if (calculatorState.shouldResetCurrentOperand) {
+                    calculatorState.currentOperand = '';
+                    calculatorState.shouldResetCurrentOperand = false;
+                }
+
+                if (calculatorState.currentOperand === '0' && digit !== '.') {
+                    calculatorState.currentOperand = digit;
+                } else {
+                    calculatorState.currentOperand += digit;
+                }
+                updateDisplay();
+            }
+
+            function appendDecimal() {
+                if (calculatorState.hasError) {
+                    clear();
+                    return;
+                }
+
+                if (calculatorState.shouldResetCurrentOperand) {
+                    calculatorState.currentOperand = '';
+                    calculatorState.shouldResetCurrentOperand = false;
+                }
+
+                if (!calculatorState.currentOperand.includes('.')) {
+                    calculatorState.currentOperand += '.';
+                }
+                updateDisplay();
+            }
+
+            function setOperation(operation) {
+                if (calculatorState.hasError) {
+                    clear();
+                    return;
+                }
+
+                if (calculatorState.currentOperand === '' && calculatorState.previousOperand === '') {
+                    return;
+                }
+
+                if (calculatorState.currentOperand !== '') {
+                    if (calculatorState.previousOperand !== '') {
+                        calculate();
+                    }
+                    calculatorState.previousOperand = calculatorState.currentOperand;
+                    calculatorState.currentOperand = '';
+                }
+
+                calculatorState.operation = operation;
+                updateDisplay();
+            }
+
+            function calculate() {
+                if (calculatorState.hasError) {
+                    clear();
+                    return;
+                }
+
+                if (calculatorState.currentOperand === '' || calculatorState.previousOperand === '' || !calculatorState.operation) {
+                    return;
+                }
+
+                let computation;
+                const prev = parseFloat(calculatorState.previousOperand);
+                const current = parseFloat(calculatorState.currentOperand);
+                
+                try {
+                    switch (calculatorState.operation) {
+                        case 'add':
+                            computation = prev + current;
+                            break;
+                        case 'subtract':
+                            computation = prev - current;
+                            break;
+                        case 'multiply':
+                            computation = prev * current;
+                            break;
+                        case 'divide':
+                            if (current === 0) {
+                                throw new Error("Cannot divide by zero");
+                            }
+                            computation = prev / current;
+                            break;
+                        case 'percentage':
+                            computation = prev * (current / 100);
+                            break;
+                        default:
+                            return;
+                    }
+
+                    // Format the result to avoid too many decimal places
+                    computation = parseFloat(computation.toFixed(10));
+                    
+                    // Add to history
+                    const expression = `${prev} ${getOperationSymbol(calculatorState.operation)} ${current}`;
+                    history.unshift({
+                        expression: expression,
+                        result: computation
+                    });
+                    
+                    // Limit history to 10 items
+                    if (history.length > 10) {
+                        history.pop();
+                    }
+                    
+                    updateHistory();
+                    
+                    calculatorState.currentOperand = computation.toString();
+                    calculatorState.operation = null;
+                    calculatorState.previousOperand = '';
+                    calculatorState.shouldResetCurrentOperand = true;
+                    updateDisplay();
+                } catch (error) {
+                    showError(error.message);
+                }
+            }
+
+            function getOperationSymbol(operation) {
+                switch (operation) {
+                    case 'add': return '+';
+                    case 'subtract': return '−';
+                    case 'multiply': return '×';
+                    case 'divide': return '÷';
+                    case 'percentage': return '%';
+                    default: return '';
+                }
+            }
+
+            function percentage() {
+                if (calculatorState.hasError) {
+                    clear();
+                    return;
+                }
+
+                if (calculatorState.currentOperand === '') return;
+
+                const value = parseFloat(calculatorState.currentOperand) / 100;
+                calculatorState.currentOperand = value.toString();
+                updateDisplay();
+            }
+
+            function clear() {
+                calculatorState.currentOperand = '0';
+                calculatorState.previousOperand = '';
+                calculatorState.operation = null;
+                calculatorState.shouldResetCurrentOperand = false;
+                calculatorState.hasError = false;
+                errorMessageElement.textContent = '';
+                updateDisplay();
+            }
+
+            function deleteLastDigit() {
+                if (calculatorState.hasError) {
+                    clear();
+                    return;
+                }
+
+                if (calculatorState.shouldResetCurrentOperand) {
+                    return;
+                }
+
+                calculatorState.currentOperand = calculatorState.currentOperand.slice(0, -1);
+                if (calculatorState.currentOperand === '') {
+                    calculatorState.currentOperand = '0';
+                }
+                updateDisplay();
+            }
+
+            function showError(message) {
+                errorMessageElement.textContent = message;
+                calculatorState.hasError = true;
+                updateDisplay();
+                
+                // Clear error after 3 seconds
+                setTimeout(() => {
+                    if (calculatorState.hasError) {
+                        errorMessageElement.textContent = '';
+                        calculatorState.hasError = false;
+                        clear();
+                    }
+                }, 3000);
+            }
+
+            function updateDisplay() {
+                currentOperandElement.textContent = calculatorState.currentOperand;
+                
+                if (calculatorState.operation) {
+                    previousOperandElement.textContent = 
+                        `${calculatorState.previousOperand} ${getOperationSymbol(calculatorState.operation)}`;
+                } else {
+                    previousOperandElement.textContent = calculatorState.previousOperand;
+                }
+            }
+
+            function updateHistory() {
+                historyListElement.innerHTML = '';
+                
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    
+                    const expressionSpan = document.createElement('span');
+                    expressionSpan.className = 'history-expression';
+                    expressionSpan.textContent = item.expression;
+                    
+                    const resultSpan = document.createElement('span');
+                    resultSpan.className = 'history-result';
+                    resultSpan.textContent = `= ${item.result}`;
+                    
+                    historyItem.appendChild(expressionSpan);
+                    historyItem.appendChild(resultSpan);
+                    historyListElement.appendChild(historyItem);
+                });
+            }
+
+            // Event Listeners
+            document.querySelector('.buttons-container').addEventListener('click', (event) => {
+                const target = event.target.closest('button');
+                if (!target) return;
+
+                if (target.dataset.digit) {
+                    appendDigit(target.dataset.digit);
+                } else if (target.dataset.action) {
+                    const action = target.dataset.action;
+                    switch (action) {
+                        case 'clear':
+                            clear();
+                            break;
+                        case 'delete':
+                            deleteLastDigit();
+                            break;
+                        case 'decimal':
+                            appendDecimal();
+                            break;
+                        case 'add':
+                        case 'subtract':
+                        case 'multiply':
+                        case 'divide':
+                            setOperation(action);
+                            break;
+                        case 'percentage':
+                            percentage();
+                            break;
+                        case 'calculate':
+                            calculate();
+                            break;
+                    }
+                }
+            });
+
+            // Keyboard Support
+            document.addEventListener('keydown', (event) => {
+                if (calculatorState.hasError) {
+                    clear();
+                    return;
+                }
+
+                if (event.key >= '0' && event.key <= '9') {
+                    appendDigit(event.key);
+                } else if (event.key === '.') {
+                    appendDecimal();
+                } else if (event.key === '+') {
+                    setOperation('add');
+                } else if (event.key === '-') {
+                    setOperation('subtract');
+                } else if (event.key === '*') {
+                    setOperation('multiply');
+                } else if (event.key === '/') {
+                    event.preventDefault(); // Prevent browser shortcut
+                    setOperation('divide');
+                } else if (event.key === '%') {
+                    percentage();
+                } else if (event.key === 'Enter' || event.key === '=') {
+                    event.preventDefault();
+                    calculate();
+                } else if (event.key === 'Escape') {
+                    clear();
+                } else if (event.key === 'Backspace') {
+                    deleteLastDigit();
+                }
+            });
+
+            // Initialize
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
